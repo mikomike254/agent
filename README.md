@@ -1,36 +1,150 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Tech Developers — Kenya & East Africa
 
-## Getting Started
+Complete marketplace platform connecting clients, commissioners, and verified developers with escrow-protected payments.
 
-First, run the development server:
+## 🚀 What's Been Built
+
+### ✅ Database & Schema
+- **17 comprehensive tables** in PostgreSQL (Supabase)
+- Full migration file: `supabase/migrations/001_initial_schema.sql`
+- Seed data with demo users, commissioners, developers
+- Audit logging, escrow ledger, payment tracking
+
+### ✅ Payment Integrations
+- **Stripe** (Visa/Mastercard with 3D Secure)
+- **Flutterwave** (M-Pesa + local cards)
+- **Coinbase Commerce** (Crypto: USDT, USDC, BTC, ETH)
+- All with webhook verification and fraud checks
+
+### ✅ Escrow Engine
+- 43% deposit held in platform escrow
+- Admin verification workflow
+- Commission calculation (25-30% to commissioner, 5% referral override, 10% platform fee, 1.5% reserve)
+- 110% refund guarantee system
+- Release on milestone approval
+
+### ✅ API Endpoints
+- `POST /api/leads` - Create lead & generate intake link
+- `GET /api/intake/[token]` - Fetch intake page data
+- `POST /api/payments/checkout` - Multi-method payment
+- `POST /webhooks/stripe` - Stripe webhooks
+- `POST /api/admin/payments/[id]/verify` - Admin verify deposit
+
+### ✅ Frontend Pages
+- **Home** page with hero, trust signals, how-it-works
+- **Intake** page (mobile-first, payment selection)
+- Commissioner, client, admin dashboards (in progress)
+
+### ✅ Communication
+- Email templates (Resend) for receipts, milestones, intake links
+- SMS ready (Twilio/Africa's Talking)
+- In-app notifications
+
+## 📁 Project Structure
+
+```
+agency/
+├── app/
+│   ├── page.tsx                    # Home page
+│   ├── intake/[token]/page.tsx     # Client intake page
+│   └── api/
+│       ├── leads/route.ts          # Create & list leads
+│       ├── intake/[token]/route.ts # Intake data
+│       ├── payments/checkout/route.ts # Payment init
+│       ├── webhooks/stripe/route.ts   # Stripe events
+│       └── admin/payments/[id]/verify/route.ts # Admin verify
+├── lib/
+│   ├── db.ts                       # Database queries
+│   ├── escrow.ts                   # Escrow & calculations
+│   ├── email.ts                    # Email templates
+│   └── payments/
+│       ├── stripe.ts
+│       ├── flutterwave.ts
+│       └── coinbase.ts
+├── types/index.ts                  # TypeScript definitions
+├── supabase/
+│   ├── migrations/001_initial_schema.sql
+│   └── seed.sql
+└── .env.example                    # Environment variables template
+```
+
+## 🛠️ Setup Instructions
+
+### 1. Install Dependencies
+
+```bash
+npm install
+```
+
+### 2. Set Up Supabase
+
+1. Create a Supabase project at https://supabase.com
+2. Run the migration:
+   ```sql
+   -- Copy contents of supabase/migrations/001_initial_schema.sql
+   -- Paste into Supabase SQL Editor and run
+   ```
+3. Run seed data (optional):
+   ```sql
+   -- Copy contents of supabase/seed.sql
+   -- Paste into SQL Editor and run
+   ```
+
+### 3. Configure Environment Variables
+
+Copy `.env.example` to `.env.local`:
+
+```bash
+cp .env.example .env.local
+```
+
+Fill in your credentials (see `.env.example` for full list)
+
+### 4. Run Development Server
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## 🔑 Core Business Rules
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Rule | Value |
+|------|-------|
+| Deposit | 43% upfront |
+| Platform Fee | 10% |
+| Reserve | 1.5% |
+| Commissioner Commission | 25-30% (tier-based) |
+| Referral Override | 5% |
+| Refund Guarantee | 110% |
 
-## Learn More
+## 🎯 How It Works
 
-To learn more about Next.js, take a look at the following resources:
+1. **Commissioner creates lead** → generates unique intake link
+2. **Client opens intake link** → sees project summary, commissioner info
+3. **Client pays 43% deposit** → via Stripe, Flutterwave (M-Pesa), or Coinbase (crypto)
+4. **Payment webhook fires** → creates payment record with `pending_verification`
+5. **Admin verifies payment** → creates escrow hold, activates project
+6. **Developer delivers milestones** → client approves in dashboard
+7. **On completion** → escrow releases, commission auto-calculated and paid out
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 🚧 To-Do / Next Steps
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### High Priority
+- [ ] Client dashboard (view projects, approve milestones)
+- [ ] Commissioner dashboard (leads, pipeline, earnings)
+- [ ] Admin dashboard (pending verifications, escrow viewer, disputes)
+- [ ] Developer dashboard (project queue, deliverables upload)
+- [ ] Authentication (NextAuth.js or Supabase Auth)
 
-## Deploy on Vercel
+### Medium Priority
+- [ ] Google Calendar integration
+- [ ] SMS notifications
+- [ ] Referral tree visualization
+- [ ] Dispute resolution workflow
+- [ ] Company CRM/HR modules
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 📄 License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proprietary - Tech Developers Kenya & East Africa
