@@ -22,3 +22,7 @@ export function CardHeader({ children, className = '' }: { children: React.React
 export function CardTitle({ children, className = '' }: { children: React.ReactNode; className?: string }) {
     return <h3 className={`text-lg font-bold text-gray-900 ${className}`}>{children}</h3>;
 }
+
+export function CardContent({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+    return <div className={`p-0 ${className}`}>{children}</div>;
+}
