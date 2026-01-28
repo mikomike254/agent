@@ -56,15 +56,16 @@ const handler = NextAuth({
                     .single();
 
                 if (!existingUser) {
-                    // Create new user
+                    // Create new user (default to client, auto-approved)
                     await supabaseAdmin
                         .from('users')
                         .insert({
                             email: user.email,
                             name: user.name,
                             avatar_url: user.image,
-                            role: 'client', // Default role
-                            verified: true
+                            role: 'client', // Default role for OAuth
+                            verified: true,
+                            status: 'active'
                         });
                 }
             }
@@ -74,6 +75,19 @@ const handler = NextAuth({
             if (user) {
                 token.role = user.role;
                 token.id = user.id;
+            } else if (token.email) {
+                // Fetch fresh user data to check approval status
+                const { data: dbUser } = await supabaseAdmin
+                    .from('users')
+                    .select('*')
+                    .eq('email', token.email)
+                    .single();
+
+                if (dbUser) {
+                    token.role = dbUser.role;
+                    token.id = dbUser.id;
+                    token.status = dbUser.status;
+                }
             }
             return token;
         },
@@ -81,8 +95,16 @@ const handler = NextAuth({
             if (session.user) {
                 (session.user as any).role = token.role;
                 (session.user as any).id = token.id;
+                (session.user as any).status = token.status;
             }
             return session;
+        },
+        async redirect({ url, baseUrl }) {
+            // Allows relative callback URLs
+            if (url.startsWith("/")) return `${baseUrl}${url}`
+            // Allows callback URLs on the same origin
+            else if (new URL(url).origin === baseUrl) return url
+            return baseUrl
         }
     },
     pages: {

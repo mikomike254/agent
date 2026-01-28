@@ -1,7 +1,19 @@
 // Email Sending via Resend
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let resendInstance: Resend | null = null;
+
+const getResend = () => {
+    if (!resendInstance) {
+        const apiKey = process.env.RESEND_API_KEY;
+        if (!apiKey) {
+            console.warn('RESEND_API_KEY is not set');
+            return null;
+        }
+        resendInstance = new Resend(apiKey);
+    }
+    return resendInstance;
+};
 
 export const emailService = {
     /**
@@ -14,6 +26,8 @@ export const emailService = {
         currency: string,
         txId: string
     ) {
+        const resend = getResend();
+        if (!resend) return;
         return await resend.emails.send({
             from: 'Tech Developers <noreply@techdev.ke>',
             to,
@@ -39,6 +53,8 @@ export const emailService = {
         projectTitle: string,
         firstMilestoneDate?: string
     ) {
+        const resend = getResend();
+        if (!resend) return;
         return await resend.emails.send({
             from: 'Tech Developers <noreply@techdev.ke>',
             to,
@@ -64,6 +80,8 @@ export const emailService = {
         milestoneName: string,
         demoLink?: string
     ) {
+        const resend = getResend();
+        if (!resend) return;
         return await resend.emails.send({
             from: 'Tech Developers <noreply@techdev.ke>',
             to,
@@ -88,6 +106,8 @@ export const emailService = {
         commissionerName: string,
         intakeLink: string
     ) {
+        const resend = getResend();
+        if (!resend) return;
         return await resend.emails.send({
             from: 'Tech Developers <noreply@techdev.ke>',
             to,

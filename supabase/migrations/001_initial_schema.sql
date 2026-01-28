@@ -8,9 +8,13 @@ CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 -- USERS & AUTH
 -- =======================
 
-CREATE TYPE user_role AS ENUM ('admin', 'commissioner', 'developer', 'client', 'support');
+DO $$ BEGIN
+    CREATE TYPE user_role AS ENUM ('admin', 'commissioner', 'developer', 'client', 'support');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE users (
+CREATE TABLE IF NOT EXISTS users (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   email VARCHAR(255) UNIQUE NOT NULL,
   name VARCHAR(255) NOT NULL,
@@ -23,14 +27,14 @@ CREATE TABLE users (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_users_email ON users(email);
-CREATE INDEX idx_users_role ON users(role);
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
 
 -- =======================
 -- COMPANIES
 -- =======================
 
-CREATE TABLE companies (
+CREATE TABLE IF NOT EXISTS companies (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   name VARCHAR(255) NOT NULL,
   type VARCHAR(100),
@@ -44,9 +48,13 @@ CREATE TABLE companies (
 -- COMMISSIONERS
 -- =======================
 
-CREATE TYPE commissioner_tier AS ENUM ('tier1', 'tier2', 'tier3');
+DO $$ BEGIN
+    CREATE TYPE commissioner_tier AS ENUM ('tier1', 'tier2', 'tier3');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE commissioners (
+CREATE TABLE IF NOT EXISTS commissioners (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   tier commissioner_tier DEFAULT 'tier1',
@@ -59,14 +67,14 @@ CREATE TABLE commissioners (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_commissioners_user ON commissioners(user_id);
-CREATE INDEX idx_commissioners_referral ON commissioners(referral_code);
+CREATE INDEX IF NOT EXISTS idx_commissioners_user ON commissioners(user_id);
+CREATE INDEX IF NOT EXISTS idx_commissioners_referral ON commissioners(referral_code);
 
 -- =======================
 -- DEVELOPERS
 -- =======================
 
-CREATE TABLE developers (
+CREATE TABLE IF NOT EXISTS developers (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   company_id UUID REFERENCES companies(id),
@@ -79,14 +87,14 @@ CREATE TABLE developers (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_developers_user ON developers(user_id);
-CREATE INDEX idx_developers_company ON developers(company_id);
+CREATE INDEX IF NOT EXISTS idx_developers_user ON developers(user_id);
+CREATE INDEX IF NOT EXISTS idx_developers_company ON developers(company_id);
 
 -- =======================
 -- CLIENTS
 -- =======================
 
-CREATE TABLE clients (
+CREATE TABLE IF NOT EXISTS clients (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
   company_name VARCHAR(255),
@@ -95,16 +103,25 @@ CREATE TABLE clients (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_clients_user ON clients(user_id);
+CREATE INDEX IF NOT EXISTS idx_clients_user ON clients(user_id);
 
 -- =======================
 -- PROJECTS
 -- =======================
 
-CREATE TYPE project_status AS ENUM ('lead', 'scoped', 'deposit_pending', 'deposit_pending_verification', 'active', 'in_review', 'completed', 'disputed', 'cancelled');
-CREATE TYPE escrow_status AS ENUM ('no_deposit', 'pending_verification', 'deposit_verified', 'held_for_dispute', 'released');
+DO $$ BEGIN
+    CREATE TYPE project_status AS ENUM ('lead', 'scoped', 'deposit_pending', 'deposit_pending_verification', 'active', 'in_review', 'completed', 'disputed', 'cancelled');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE projects (
+DO $$ BEGIN
+    CREATE TYPE escrow_status AS ENUM ('no_deposit', 'pending_verification', 'deposit_verified', 'held_for_dispute', 'released');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS projects (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   title VARCHAR(255) NOT NULL,
   description TEXT,
@@ -121,18 +138,22 @@ CREATE TABLE projects (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_projects_client ON projects(client_id);
-CREATE INDEX idx_projects_commissioner ON projects(commissioner_id);
-CREATE INDEX idx_projects_developer ON projects(developer_id);
-CREATE INDEX idx_projects_status ON projects(status);
+CREATE INDEX IF NOT EXISTS idx_projects_client ON projects(client_id);
+CREATE INDEX IF NOT EXISTS idx_projects_commissioner ON projects(commissioner_id);
+CREATE INDEX IF NOT EXISTS idx_projects_developer ON projects(developer_id);
+CREATE INDEX IF NOT EXISTS idx_projects_status ON projects(status);
 
 -- =======================
 -- PROJECT MILESTONES
 -- =======================
 
-CREATE TYPE milestone_status AS ENUM ('pending', 'in_progress', 'delivered', 'approved', 'rejected');
+DO $$ BEGIN
+    CREATE TYPE milestone_status AS ENUM ('pending', 'in_progress', 'delivered', 'approved', 'rejected');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE project_milestones (
+CREATE TABLE IF NOT EXISTS project_milestones (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id) ON DELETE CASCADE,
   title VARCHAR(255) NOT NULL,
@@ -146,16 +167,25 @@ CREATE TABLE project_milestones (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_milestones_project ON project_milestones(project_id);
+CREATE INDEX IF NOT EXISTS idx_milestones_project ON project_milestones(project_id);
 
 -- =======================
 -- PAYMENTS
 -- =======================
 
-CREATE TYPE payment_method AS ENUM ('card', 'mpesa', 'crypto', 'bank', 'paypal');
-CREATE TYPE payment_status AS ENUM ('pending_verification', 'verified', 'released', 'refunded', 'failed');
+DO $$ BEGIN
+    CREATE TYPE payment_method AS ENUM ('card', 'mpesa', 'crypto', 'bank', 'paypal');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE payments (
+DO $$ BEGIN
+    CREATE TYPE payment_status AS ENUM ('pending_verification', 'verified', 'released', 'refunded', 'failed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS payments (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id),
   payer_id UUID REFERENCES users(id),
@@ -181,9 +211,13 @@ CREATE INDEX idx_payments_tx_hash ON payments(tx_hash);
 -- ESCROW LEDGER
 -- =======================
 
-CREATE TYPE escrow_action AS ENUM ('hold', 'release', 'refund', 'adjust');
+DO $$ BEGIN
+    CREATE TYPE escrow_action AS ENUM ('hold', 'release', 'refund', 'adjust');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE escrow_ledger (
+CREATE TABLE IF NOT EXISTS escrow_ledger (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id),
   payment_id UUID REFERENCES payments(id),
@@ -195,16 +229,20 @@ CREATE TABLE escrow_ledger (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_escrow_project ON escrow_ledger(project_id);
-CREATE INDEX idx_escrow_created ON escrow_ledger(created_at);
+CREATE INDEX IF NOT EXISTS idx_escrow_project ON escrow_ledger(project_id);
+CREATE INDEX IF NOT EXISTS idx_escrow_created ON escrow_ledger(created_at);
 
 -- =======================
 -- COMMISSIONS
 -- =======================
 
-CREATE TYPE commission_status AS ENUM ('pending', 'released', 'paid');
+DO $$ BEGIN
+    CREATE TYPE commission_status AS ENUM ('pending', 'released', 'paid');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE commissions (
+CREATE TABLE IF NOT EXISTS commissions (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id),
   commissioner_id UUID NOT NULL REFERENCES commissioners(id),
@@ -215,14 +253,14 @@ CREATE TABLE commissions (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_commissions_commissioner ON commissions(commissioner_id);
-CREATE INDEX idx_commissions_project ON commissions(project_id);
+CREATE INDEX IF NOT EXISTS idx_commissions_commissioner ON commissions(commissioner_id);
+CREATE INDEX IF NOT EXISTS idx_commissions_project ON commissions(project_id);
 
 -- =======================
 -- REFERRALS
 -- =======================
 
-CREATE TABLE referrals (
+CREATE TABLE IF NOT EXISTS referrals (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   referrer_id UUID NOT NULL REFERENCES commissioners(id),
   referee_id UUID NOT NULL REFERENCES commissioners(id),
@@ -230,16 +268,20 @@ CREATE TABLE referrals (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_referrals_referrer ON referrals(referrer_id);
-CREATE INDEX idx_referrals_referee ON referrals(referee_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referrer ON referrals(referrer_id);
+CREATE INDEX IF NOT EXISTS idx_referrals_referee ON referrals(referee_id);
 
 -- =======================
 -- PAYOUTS
 -- =======================
 
-CREATE TYPE payout_status AS ENUM ('scheduled', 'processing', 'completed', 'failed');
+DO $$ BEGIN
+    CREATE TYPE payout_status AS ENUM ('scheduled', 'processing', 'completed', 'failed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE payouts (
+CREATE TABLE IF NOT EXISTS payouts (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   recipient_id UUID NOT NULL REFERENCES users(id),
   project_id UUID REFERENCES projects(id),
@@ -252,16 +294,20 @@ CREATE TABLE payouts (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_payouts_recipient ON payouts(recipient_id);
-CREATE INDEX idx_payouts_status ON payouts(status);
+CREATE INDEX IF NOT EXISTS idx_payouts_recipient ON payouts(recipient_id);
+CREATE INDEX IF NOT EXISTS idx_payouts_status ON payouts(status);
 
 -- =======================
 -- DISPUTES
 -- =======================
 
-CREATE TYPE dispute_status AS ENUM ('open', 'investigating', 'resolved', 'closed');
+DO $$ BEGIN
+    CREATE TYPE dispute_status AS ENUM ('open', 'investigating', 'resolved', 'closed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE disputes (
+CREATE TABLE IF NOT EXISTS disputes (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID NOT NULL REFERENCES projects(id),
   raised_by UUID NOT NULL REFERENCES users(id),
@@ -274,14 +320,14 @@ CREATE TABLE disputes (
   resolved_at TIMESTAMP WITH TIME ZONE
 );
 
-CREATE INDEX idx_disputes_project ON disputes(project_id);
-CREATE INDEX idx_disputes_status ON disputes(status);
+CREATE INDEX IF NOT EXISTS idx_disputes_project ON disputes(project_id);
+CREATE INDEX IF NOT EXISTS idx_disputes_status ON disputes(status);
 
 -- =======================
 -- AUDIT LOGS
 -- =======================
 
-CREATE TABLE audit_logs (
+CREATE TABLE IF NOT EXISTS audit_logs (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   actor_id UUID REFERENCES users(id),
   actor_role user_role,
@@ -290,15 +336,15 @@ CREATE TABLE audit_logs (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_audit_actor ON audit_logs(actor_id);
-CREATE INDEX idx_audit_created ON audit_logs(created_at);
-CREATE INDEX idx_audit_action ON audit_logs(action);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_logs(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_logs(action);
 
 -- =======================
 -- FILES
 -- =======================
 
-CREATE TABLE files (
+CREATE TABLE IF NOT EXISTS files (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   project_id UUID REFERENCES projects(id),
   uploader_id UUID NOT NULL REFERENCES users(id),
@@ -309,16 +355,20 @@ CREATE TABLE files (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_files_project ON files(project_id);
-CREATE INDEX idx_files_uploader ON files(uploader_id);
+CREATE INDEX IF NOT EXISTS idx_files_project ON files(project_id);
+CREATE INDEX IF NOT EXISTS idx_files_uploader ON files(uploader_id);
 
 -- =======================
 -- NOTIFICATIONS
 -- =======================
 
-CREATE TYPE notification_channel AS ENUM ('email', 'sms', 'in_app', 'push');
+DO $$ BEGIN
+    CREATE TYPE notification_channel AS ENUM ('email', 'sms', 'in_app', 'push');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE notifications (
+CREATE TABLE IF NOT EXISTS notifications (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id),
   channel notification_channel NOT NULL,
@@ -329,17 +379,26 @@ CREATE TABLE notifications (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_notifications_user ON notifications(user_id);
-CREATE INDEX idx_notifications_read ON notifications(read_at);
+CREATE INDEX IF NOT EXISTS idx_notifications_user ON notifications(user_id);
+CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read_at);
 
 -- =======================
 -- KYC DOCUMENTS
 -- =======================
 
-CREATE TYPE kyc_doc_type AS ENUM ('id', 'selfie', 'proof_of_address', 'tax_cert', 'other');
-CREATE TYPE kyc_doc_status AS ENUM ('pending', 'approved', 'rejected');
+DO $$ BEGIN
+    CREATE TYPE kyc_doc_type AS ENUM ('id', 'selfie', 'proof_of_address', 'tax_cert', 'other');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE kyc_documents (
+DO $$ BEGIN
+    CREATE TYPE kyc_doc_status AS ENUM ('pending', 'approved', 'rejected');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
+
+CREATE TABLE IF NOT EXISTS kyc_documents (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   user_id UUID NOT NULL REFERENCES users(id),
   doc_type kyc_doc_type NOT NULL,
@@ -351,16 +410,20 @@ CREATE TABLE kyc_documents (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_kyc_user ON kyc_documents(user_id);
-CREATE INDEX idx_kyc_status ON kyc_documents(status);
+CREATE INDEX IF NOT EXISTS idx_kyc_user ON kyc_documents(user_id);
+CREATE INDEX IF NOT EXISTS idx_kyc_status ON kyc_documents(status);
 
 -- =======================
 -- LEADS (for intake flow)
 -- =======================
 
-CREATE TYPE lead_status AS ENUM ('created', 'sent', 'viewed', 'meeting_scheduled', 'deposit_paid', 'active', 'closed');
+DO $$ BEGIN
+    CREATE TYPE lead_status AS ENUM ('created', 'sent', 'viewed', 'meeting_scheduled', 'deposit_paid', 'active', 'closed');
+EXCEPTION
+    WHEN duplicate_object THEN null;
+END $$;
 
-CREATE TABLE leads (
+CREATE TABLE IF NOT EXISTS leads (
   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   commissioner_id UUID NOT NULL REFERENCES commissioners(id),
   client_name VARCHAR(255) NOT NULL,
@@ -376,9 +439,9 @@ CREATE TABLE leads (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
-CREATE INDEX idx_leads_commissioner ON leads(commissioner_id);
-CREATE INDEX idx_leads_intake_token ON leads(intake_token);
-CREATE INDEX idx_leads_status ON leads(status);
+CREATE INDEX IF NOT EXISTS idx_leads_commissioner ON leads(commissioner_id);
+CREATE INDEX IF NOT EXISTS idx_leads_intake_token ON leads(intake_token);
+CREATE INDEX IF NOT EXISTS idx_leads_status ON leads(status);
 
 -- =======================
 -- FUNCTIONS

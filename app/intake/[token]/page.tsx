@@ -35,7 +35,7 @@ export default function IntakePage() {
     const [data, setData] = useState<IntakeData | null>(null);
     const [loading, setLoading] = useState(true);
     const [paymentLoading, setPaymentLoading] = useState(false);
-    const [selectedMethod, setSelectedMethod] = useState<string>('stripe');
+    const [selectedMethod, setSelectedMethod] = useState<string>('card');
 
     useEffect(() => {
         fetch(`/api/intake/${token}`)
@@ -173,10 +173,10 @@ export default function IntakePage() {
                                     <p className="text-sm font-semibold text-gray-700">Select payment method:</p>
                                     <div className="grid grid-cols-3 gap-3">
                                         <button
-                                            onClick={() => setSelectedMethod('stripe')}
-                                            className={`px-4 py-3 border-2 rounded-lg font-medium transition ${selectedMethod === 'stripe'
-                                                    ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
-                                                    : 'border-gray-300 hover:border-[#1f7a5a]'
+                                            onClick={() => setSelectedMethod('card')}
+                                            className={`px-4 py-3 border-2 rounded-lg font-medium transition ${selectedMethod === 'card'
+                                                ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
+                                                : 'border-gray-300 hover:border-[#1f7a5a]'
                                                 }`}
                                         >
                                             Card
@@ -184,8 +184,8 @@ export default function IntakePage() {
                                         <button
                                             onClick={() => setSelectedMethod('mpesa')}
                                             className={`px-4 py-3 border-2 rounded-lg font-medium transition ${selectedMethod === 'mpesa'
-                                                    ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
-                                                    : 'border-gray-300 hover:border-[#1f7a5a]'
+                                                ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
+                                                : 'border-gray-300 hover:border-[#1f7a5a]'
                                                 }`}
                                         >
                                             M-Pesa
@@ -193,8 +193,8 @@ export default function IntakePage() {
                                         <button
                                             onClick={() => setSelectedMethod('crypto')}
                                             className={`px-4 py-3 border-2 rounded-lg font-medium transition ${selectedMethod === 'crypto'
-                                                    ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
-                                                    : 'border-gray-300 hover:border-[#1f7a5a]'
+                                                ? 'border-[#1f7a5a] bg-[#1f7a5a] text-white'
+                                                : 'border-gray-300 hover:border-[#1f7a5a]'
                                                 }`}
                                         >
                                             Crypto

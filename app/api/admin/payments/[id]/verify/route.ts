@@ -6,10 +6,10 @@ import { emailService } from '@/lib/email';
 
 export async function POST(
     request: NextRequest,
-    { params }: { params: { id: string } }
+    { params }: { params: Promise<{ id: string }> }
 ) {
     try {
-        const { id: paymentId } = params;
+        const { id: paymentId } = await params;
         const body = await request.json();
         const { admin_id, notes } = body;
 

@@ -1,26 +1,94 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Brand Colors - Cool Tones */
+  --primary: #5347CE;
+  /* Deep Violet */
+  --primary-light: #887CFD;
+  /* Soft Violet */
+  --secondary: #4896FE;
+  /* Clear Blue */
+  --accent: #16C8C7;
+  /* Teal */
+
+  /* Functional Colors */
+  --success: #34D399;
+  --warning: #FBBC05;
+  --danger: #EF4444;
+
+  /* Backgrounds */
+  --bg-app: #F5F7FA;
+  --bg-card: #FFFFFF;
+  --bg-sidebar: #FFFFFF;
+
+  /* Text */
+  --text-primary: #1E293B;
+  --text-secondary: #64748B;
+
+  /* Soft UI Shadows */
+  --shadow-soft: 0 4px 20px -2px rgba(83, 71, 206, 0.08);
+  --shadow-hover: 0 10px 25px -5px rgba(83, 71, 206, 0.15);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-outfit), sans-serif;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-brand-violet: var(--primary);
+  --color-brand-soft: var(--primary-light);
+  --color-brand-blue: var(--secondary);
+  --color-brand-teal: var(--accent);
+
+  --color-bg-app: var(--bg-app);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+}
+
+/* Custom Utilities for Soft UI */
+.card-soft {
+  background: var(--bg-card);
+  border-radius: 16px;
+  box-shadow: var(--shadow-soft);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  transition: all 0.3s ease;
+}
+
+.card-soft:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 12px rgba(72, 150, 254, 0.25);
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(72, 150, 254, 0.35);
+}
+
+.sidebar-item {
+  border-radius: 12px;
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.sidebar-item.active {
+  background: rgba(83, 71, 206, 0.08);
+  color: var(--primary);
+  font-weight: 600;
+}
+
+.sidebar-item:hover:not(.active) {
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-primary);
 }

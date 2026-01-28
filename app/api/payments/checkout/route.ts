@@ -1,8 +1,7 @@
 // API Route: Create Payment Checkout
 import { NextRequest, NextResponse } from 'next/server';
-import { stripePayments } from '@/lib/payments/stripe';
-import { flutterwavePayments } from '@/lib/payments/flutterwave';
 import { coinbasePayments } from '@/lib/payments/coinbase';
+import { paystackPayments } from '@/lib/payments/paystack';
 import { supabaseAdmin, db } from '@/lib/db';
 import { PLATFORM_CONFIG } from '@/lib/escrow';
 
@@ -29,29 +28,19 @@ export async function POST(request: NextRequest) {
 
         let paymentUrl = '';
         let gatewayData: any = {};
+        let gateway = '';
 
-        // Handle different payment methods
-        if (method === 'stripe' || method === 'card') {
-            const session = await stripePayments.createCheckoutSession(
-                lead_id,
+        // Handle different payment methods (Prioritizing Paystack)
+        if (method === 'card' || method === 'mpesa' || method === 'paystack') {
+            const response = await paystackPayments.initializeTransaction(
                 depositAmount,
-                'KES',
-                successUrl,
-                cancelUrl
-            );
-            paymentUrl = session.url!;
-            gatewayData = { session_id: session.id };
-        } else if (method === 'flutterwave' || method === 'mpesa') {
-            const response = await flutterwavePayments.initializePayment(
-                depositAmount,
-                'KES',
                 client_email || lead.client_email,
-                client_phone || lead.client_phone,
                 lead_id,
                 successUrl
             );
-            paymentUrl = response.data.link;
-            gatewayData = { tx_ref: response.data.tx_ref };
+            paymentUrl = response.data.authorization_url;
+            gatewayData = { reference: response.data.reference, access_code: response.data.access_code };
+            gateway = 'paystack';
         } else if (method === 'crypto') {
             const charge = await coinbasePayments.createCharge(
                 depositAmount,
@@ -62,6 +51,7 @@ export async function POST(request: NextRequest) {
             );
             paymentUrl = charge.hosted_url;
             gatewayData = { charge_id: charge.id, charge_code: charge.code };
+            gateway = 'coinbase';
         } else {
             return NextResponse.json(
                 { error: 'Unsupported payment method' },
@@ -75,7 +65,7 @@ export async function POST(request: NextRequest) {
             .insert({
                 project_id: lead_id, // Will link to project later
                 method,
-                gateway: method === 'stripe' ? 'stripe' : method === 'mpesa' ? 'flutterwave' : 'coinbase',
+                gateway,
                 currency: method === 'crypto' ? 'USD' : 'KES',
                 amount: depositAmount,
                 status: 'pending_verification',
