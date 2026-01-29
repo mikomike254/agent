@@ -3,8 +3,9 @@
 
 import { useSession } from 'next-auth/react';
 import { useState, useEffect } from 'react';
-import { Briefcase, Upload, Clock, CheckCircle, AlertTriangle, Wallet, Activity } from 'lucide-react';
+import { Briefcase, Upload, Clock, CheckCircle, AlertTriangle, Wallet, Activity, ArrowUpRight } from 'lucide-react';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 
 export default function DeveloperDashboard() {
     const { data: session } = useSession();
@@ -32,172 +33,199 @@ export default function DeveloperDashboard() {
     }, [session]);
 
     if (loading) {
-        return <div className="p-8 text-center text-[var(--text-secondary)]">Loading dashboard...</div>;
+        return (
+            <div className="min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+                <div className="w-10 h-10 border-4 border-indigo-100 border-t-indigo-600 rounded-full animate-spin" />
+                <p className="text-xs font-black text-gray-400 uppercase tracking-widest">Compiling Dashboard</p>
+            </div>
+        );
     }
 
     if (!data) {
-        return <div className="p-8 text-center text-[var(--text-secondary)]">Failed to load dashboard data.</div>;
+        return (
+            <div className="p-12 text-center bg-red-50 rounded-3xl border border-red-100">
+                <p className="text-red-600 font-bold">Failed to initialize workspace data stream.</p>
+            </div>
+        );
     }
 
     const { profile, projects } = data;
 
+    const containerVariants = {
+        hidden: { opacity: 0 },
+        visible: {
+            opacity: 1,
+            transition: {
+                staggerChildren: 0.1
+            }
+        }
+    };
+
+    const itemVariants = {
+        hidden: { y: 20, opacity: 0 },
+        visible: { y: 0, opacity: 1 }
+    };
+
     return (
-        <div className="space-y-8">
-            {/* Header */}
-            <div>
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[var(--primary)] to-[var(--accent)]">
-                    Welcome back, {session?.user?.name}
-                </h1>
-                <p className="text-[var(--text-secondary)] mt-1">
-                    Here's your squad performance and active tasks.
-                </p>
-            </div>
-
-            {/* Metrics Grid */}
-            <div className="grid md:grid-cols-4 gap-6">
-                {/* Reliability Score */}
-                <div className="card-soft p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-blue-500/10 rounded-lg">
-                            <Activity className="w-5 h-5 text-[var(--secondary)]" />
-                        </div>
-                        <span className="text-sm text-[var(--text-secondary)]">Reliability Score</span>
-                    </div>
-                    <div className="flex items-baseline gap-2">
-                        <p className="text-3xl font-bold text-[var(--text-primary)]">{profile?.reliability_score || 100}%</p>
-                        {profile?.reliability_score < 90 && (
-                            <span className="text-xs text-[var(--danger)] flex items-center gap-1">
-                                <AlertTriangle className="w-3 h-3" /> Risk
-                            </span>
-                        )}
-                    </div>
-                </div>
-
-                {/* Active Projects */}
-                <div className="card-soft p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-purple-500/10 rounded-lg">
-                            <Briefcase className="w-5 h-5 text-[var(--primary)]" />
-                        </div>
-                        <span className="text-sm text-[var(--text-secondary)]">Active Projects</span>
-                    </div>
-                    <p className="text-3xl font-bold text-[var(--text-primary)]">{projects.length}</p>
-                </div>
-
-                {/* Pending Earnings */}
-                <div className="card-soft p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-yellow-500/10 rounded-lg">
-                            <Clock className="w-5 h-5 text-[var(--warning)]" />
-                        </div>
-                        <span className="text-sm text-[var(--text-secondary)]">Pending (Escrow)</span>
-                    </div>
-                    <p className="text-3xl font-bold text-[var(--text-primary)]">
-                        KES {Number(profile?.pending_balance || 0).toLocaleString()}
+        <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+            className="space-y-10 pb-12"
+        >
+            {/* Header Area */}
+            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                    <h1 className="text-4xl md:text-5xl font-black text-gray-900 tracking-tighter">
+                        Nexus <span className="text-indigo-600">Workspace</span>
+                    </h1>
+                    <p className="text-gray-500 font-medium mt-2 max-w-lg">
+                        Welcome, <span className="text-gray-900 font-bold">{session?.user?.name}</span>.
+                        Your development squad is currently active on {projects.length} deliverables.
                     </p>
                 </div>
-
-                {/* Available Wallet */}
-                <div className="card-soft p-6">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="p-2 bg-green-500/10 rounded-lg">
-                            <Wallet className="w-5 h-5 text-[var(--success)]" />
-                        </div>
-                        <span className="text-sm text-[var(--text-secondary)]">Available Wallet</span>
-                    </div>
-                    <p className="text-3xl font-bold text-[var(--success)]">
-                        KES {Number(profile?.available_balance || 0).toLocaleString()}
-                    </p>
+                <div className="flex gap-3">
+                    <button className="px-5 py-2.5 bg-white border border-gray-100 rounded-2xl text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
+                        Availability: ON
+                    </button>
+                    <button className="px-5 py-2.5 bg-indigo-600 text-white rounded-2xl text-sm font-bold shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all">
+                        Active Mode
+                    </button>
                 </div>
             </div>
 
-            {/* Project Workspace */}
-            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--bg-input)] overflow-hidden">
-                <div className="p-6 border-b border-[var(--bg-input)] flex justify-between items-center">
-                    <h2 className="text-lg font-bold text-[var(--text-primary)]">Project Workspace</h2>
-                    <Link href="/dashboard/developer/earnings" className="text-sm text-[var(--primary-light)] hover:underline">
-                        View Earnings History
-                    </Link>
+            {/* Metrics Section */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {[
+                    { label: 'Reliability Score', value: `${profile?.reliability_score || 100}%`, icon: Activity, color: 'indigo' },
+                    { label: 'Project Load', value: projects.length, icon: Briefcase, color: 'purple' },
+                    { label: 'Escrow Reserve', value: `KES ${Number(profile?.pending_balance || 0).toLocaleString()}`, icon: Clock, color: 'amber' },
+                    { label: 'Liquid Wallet', value: `KES ${Number(profile?.available_balance || 0).toLocaleString()}`, icon: Wallet, color: 'emerald' },
+                ].map((metric, idx) => (
+                    <motion.div
+                        key={idx}
+                        variants={itemVariants}
+                        className="card-soft p-8 relative overflow-hidden group"
+                    >
+                        <div className={`absolute top-0 right-0 w-32 h-32 bg-${metric.color}-500/5 rounded-full -mr-16 -mt-16 blur-2xl group-hover:scale-150 transition-transform duration-700`} />
+
+                        <div className="relative z-10 space-y-4">
+                            <div className={`w-12 h-12 rounded-2xl bg-${metric.color}-50 flex items-center justify-center text-${metric.color}-600`}>
+                                <metric.icon className="w-6 h-6" />
+                            </div>
+                            <div>
+                                <p className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-1">{metric.label}</p>
+                                <p className={`text-2xl font-black text-gray-900 group-hover:text-indigo-600 transition-colors`}>
+                                    {metric.value}
+                                </p>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* Projects Container */}
+            <motion.div variants={itemVariants} className="space-y-6">
+                <div className="flex items-center justify-between px-2">
+                    <div className="flex items-center gap-3">
+                        <div className="w-2 h-8 bg-indigo-600 rounded-full" />
+                        <h2 className="text-2xl font-black text-gray-900 tracking-tight">Deployment Pipeline</h2>
+                    </div>
                 </div>
 
-                <div className="divide-y divide-[var(--bg-input)]">
+                <div className="grid gap-6">
                     {projects.length === 0 ? (
-                        <div className="p-12 text-center text-[var(--text-muted)]">
-                            No active projects. Waiting for squad assignment...
+                        <div className="p-20 text-center bg-gray-50/50 rounded-[40px] border-2 border-dashed border-gray-100">
+                            <Briefcase className="w-12 h-12 text-gray-200 mx-auto mb-4" />
+                            <p className="text-gray-400 font-bold uppercase tracking-widest text-xs">No active nodes detected in squad pipeline</p>
                         </div>
                     ) : (
                         projects.map((project: any) => (
-                            <div key={project.id} className="p-6 hover:bg-[var(--bg-input)]/50 transition-colors">
-                                <div className="flex flex-col md:flex-row justify-between gap-6">
-                                    {/* Project Info */}
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-3 mb-2">
-                                            <h3 className="text-lg font-bold text-[var(--text-primary)]">{project.title}</h3>
-                                            <span className={`px-2 py-0.5 rounded text-xs font-medium uppercase border ${project.role === 'lead' ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' :
-                                                    project.role === 'qa' ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20' :
-                                                        'bg-blue-500/10 text-blue-400 border-blue-500/20'
-                                                }`}>
-                                                {project.role} Squad
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-[var(--text-secondary)] mb-4">
-                                            Client: {project.client?.company_name || 'Private'} • Total Value: KES {project.total_value?.toLocaleString()}
-                                        </p>
-
-                                        {/* Burn Rate / Active Milestone */}
-                                        <div className="bg-[var(--bg-app)] p-4 rounded-xl border border-[var(--bg-input)]">
-                                            <div className="flex justify-between items-center mb-2">
-                                                <span className="text-sm font-medium text-[var(--text-primary)]">
-                                                    Current Phase: {project.active_milestone?.title || 'No Active Milestone'}
+                            <motion.div
+                                key={project.id}
+                                whileHover={{ scale: 1.01 }}
+                                className="card-soft group cursor-pointer"
+                            >
+                                <div className="p-8 md:p-10">
+                                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+                                        <div className="flex-1 space-y-6">
+                                            <div className="flex flex-wrap items-center gap-4">
+                                                <h3 className="text-2xl font-black text-gray-900 tracking-tight group-hover:text-indigo-600 transition-colors">
+                                                    {project.title}
+                                                </h3>
+                                                <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-wider border ${project.role === 'lead' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                                                        project.role === 'qa' ? 'bg-amber-50 text-amber-700 border-amber-100' :
+                                                            'bg-purple-50 text-purple-700 border-purple-100'
+                                                    }`}>
+                                                    Squad Position: {project.role}
                                                 </span>
-                                                {project.active_milestone && (
-                                                    <span className={`text-xs font-bold px-2 py-1 rounded ${project.days_remaining < 3 ? 'bg-red-500/20 text-red-400' : 'bg-green-500/20 text-green-400'
-                                                        }`}>
-                                                        {project.days_remaining} Days Left (Burn Rate)
-                                                    </span>
-                                                )}
                                             </div>
 
-                                            {project.active_milestone && (
-                                                <div className="w-full bg-[var(--bg-input)] rounded-full h-2 mb-2">
-                                                    <div
-                                                        className="bg-[var(--primary)] h-2 rounded-full transition-all"
-                                                        style={{ width: `${project.active_milestone.percent_amount}%` }}
-                                                    ></div>
+                                            <div className="grid sm:grid-cols-2 gap-6 p-6 bg-gray-50/50 rounded-3xl border border-gray-100/50">
+                                                <div className="space-y-3">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Active Phase</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                                            <Activity className="w-5 h-5 text-indigo-600" />
+                                                        </div>
+                                                        <span className="text-sm font-black text-gray-800">{project.active_milestone?.title || 'System Idle'}</span>
+                                                    </div>
                                                 </div>
-                                            )}
+                                                <div className="space-y-3">
+                                                    <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Temporal Status</p>
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-xl bg-white border border-gray-100 flex items-center justify-center shadow-sm">
+                                                            <Clock className="w-5 h-5 text-amber-500" />
+                                                        </div>
+                                                        <span className={`text-sm font-black ${project.days_remaining < 3 ? 'text-red-600' : 'text-gray-800'}`}>
+                                                            {project.days_remaining || '∞'} Days Remaining
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
 
-                                            <div className="flex gap-3 mt-3">
-                                                <button className="text-xs px-3 py-1.5 bg-[var(--bg-input)] hover:bg-[var(--bg-input)]/80 text-[var(--text-primary)] rounded-lg transition-colors flex items-center gap-2">
-                                                    <Upload className="w-3 h-3" /> Log Work Update
+                                            <div className="flex flex-wrap gap-3 pt-2">
+                                                <Link
+                                                    href={`/dashboard/developer/projects/${project.id}`}
+                                                    className="px-6 py-3 bg-indigo-600 text-white rounded-2xl text-xs font-black uppercase tracking-widest shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition-all flex items-center gap-2 group/btn"
+                                                >
+                                                    Access Node <ArrowUpRight className="w-4 h-4 group-hover/btn:translate-x-1 group-hover/btn:-translate-y-1 transition-transform" />
+                                                </Link>
+                                                <button className="px-6 py-3 bg-white border border-gray-100 text-gray-500 rounded-2xl text-xs font-black uppercase tracking-widest hover:bg-gray-50 transition-all shadow-sm">
+                                                    Telemetry Data
                                                 </button>
-                                                {project.role === 'qa' && (
-                                                    <button className="text-xs px-3 py-1.5 bg-[var(--warning)] text-black font-semibold rounded-lg hover:brightness-110 transition-colors">
-                                                        Verify Code
-                                                    </button>
-                                                )}
                                             </div>
                                         </div>
-                                    </div>
 
-                                    {/* Actions */}
-                                    <div className="flex flex-col justify-center gap-2 min-w-[140px]">
-                                        <Link
-                                            href={`/dashboard/developer/projects/${project.id}`}
-                                            className="w-full py-2 px-4 bg-[var(--primary)] text-white text-sm font-semibold rounded-xl hover:brightness-110 text-center shadow-lg shadow-indigo-500/20"
-                                        >
-                                            Open Workspace
-                                        </Link>
-                                        <button className="w-full py-2 px-4 border border-[var(--bg-input)] text-[var(--text-secondary)] text-sm font-medium rounded-xl hover:bg-[var(--bg-input)] transition-colors">
-                                            View Contract
-                                        </button>
+                                        <div className="lg:w-72 space-y-4">
+                                            <div className="p-6 bg-white border border-gray-100 rounded-[32px] shadow-sm">
+                                                <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">Phase Saturation</p>
+                                                <div className="relative w-32 h-32 mx-auto">
+                                                    <svg className="w-full h-full transform -rotate-90">
+                                                        <circle cx="64" cy="64" r="58" fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                                                        <motion.circle
+                                                            cx="64" cy="64" r="58" fill="none" stroke="#6366f1" strokeWidth="12"
+                                                            strokeDasharray={`${2 * Math.PI * 58}`}
+                                                            initial={{ strokeDashoffset: 2 * Math.PI * 58 }}
+                                                            animate={{ strokeDashoffset: 2 * Math.PI * 58 * (1 - (project.active_milestone?.percent_amount || 0) / 100) }}
+                                                            strokeLinecap="round"
+                                                            transition={{ duration: 2, ease: "easeOut" }}
+                                                        />
+                                                    </svg>
+                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                        <span className="text-xl font-black text-gray-900">{project.active_milestone?.percent_amount || 0}%</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))
-                    )}
+                    )
+                    }
                 </div>
-            </div>
-        </div>
+            </motion.div>
+        </motion.div>
     );
 }

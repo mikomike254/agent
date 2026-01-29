@@ -9,7 +9,7 @@ import {
     Briefcase,
     Shield,
     Settings,
-    User, // Added User icon
+    User,
     Users,
     Search,
     MessageSquare,
@@ -18,12 +18,15 @@ import {
     BookOpen,
     LogOut,
     Bell,
-    FileText
+    FileText,
+    X
 } from 'lucide-react';
 import { signOut } from 'next-auth/react';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const menuItems = {
+    // ... items stay the same ...
     admin: [
         { name: 'Dashboard', icon: LayoutDashboard, href: '/dashboard/admin' },
         { name: 'Approvals', icon: Shield, href: '/dashboard/admin/approvals' },
@@ -63,84 +66,112 @@ const menuItems = {
     ]
 };
 
-export function Sidebar({ role }: { role: 'admin' | 'client' | 'commissioner' | 'developer' }) {
+export function Sidebar({
+    role,
+    isOpen,
+    onClose
+}: {
+    role: 'admin' | 'client' | 'commissioner' | 'developer';
+    isOpen: boolean;
+    onClose: () => void;
+}) {
     const pathname = usePathname();
     const items = menuItems[role] || [];
 
+    const sidebarVariants = {
+        open: { x: 0, opacity: 1 },
+        closed: { x: '-100%', opacity: 0 }
+    };
+
     return (
-        <aside className="w-64 bg-[var(--bg-sidebar)] border-r border-[var(--bg-input)] h-screen fixed left-0 top-0 flex flex-col z-20 shadow-[4px_0_24px_rgba(0,0,0,0.2)]">
-            {/* Brand */}
-            <div className="p-8 pb-4">
-                <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-[#5347CE] to-[#16C8C7]">
-                    Nexus
-                </h1>
-                <p className="text-xs text-gray-400 mt-1 uppercase tracking-wider font-medium">Workspace</p>
-            </div>
+        <AnimatePresence>
+            {isOpen && (
+                <>
+                    {/* Backdrop for mobile */}
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden"
+                    />
 
-            {/* Navigation */}
-            <nav className="flex-1 px-4 py-4 space-y-1">
-                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 mt-2">
-                    Menu
-                </p>
+                    <motion.aside
+                        initial="closed"
+                        animate="open"
+                        exit="closed"
+                        variants={sidebarVariants}
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                        className="w-72 bg-white border-r border-gray-100 h-[100dvh] fixed left-0 top-0 flex flex-col z-50 shadow-2xl lg:shadow-none"
+                    >
+                        {/* Brand */}
+                        <div className="p-8 pb-4 flex items-center justify-between">
+                            <div>
+                                <h1 className="text-3xl font-black bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-purple-600 tracking-tighter">
+                                    Nexus
+                                </h1>
+                                <p className="text-[10px] text-gray-400 mt-1 uppercase tracking-widest font-black">Workspace Engine</p>
+                            </div>
+                            <button
+                                onClick={onClose}
+                                className="lg:hidden p-2 hover:bg-gray-100 rounded-xl transition-colors"
+                            >
+                                <X className="w-6 h-6 text-gray-400" />
+                            </button>
+                        </div>
 
-                {items.map((item) => {
-                    const isActive = pathname === item.href;
-                    const Icon = item.icon;
+                        {/* Navigation */}
+                        <nav className="flex-1 px-5 py-6 space-y-1.5 overflow-y-auto custom-scrollbar">
+                            <p className="px-4 text-[10px] font-black text-gray-400 uppercase tracking-widest mb-4">
+                                Main Navigation
+                            </p>
 
-                    return (
-                        <Link
-                            key={item.href}
-                            href={item.href}
-                            className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                ? 'bg-indigo-50/80 text-[#5347CE] font-semibold shadow-sm'
-                                : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                                }`}
-                        >
-                            <Icon className={`w-5 h-5 ${isActive ? 'text-[#5347CE]' : 'text-gray-400 group-hover:text-gray-600'}`} />
-                            {item.name}
-                        </Link>
-                    );
-                })}
+                            {items.map((item, idx) => {
+                                const isActive = pathname === item.href;
+                                const Icon = item.icon;
 
-                {/* Support Section */}
-                <p className="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4 mt-8">
-                    Support
-                </p>
-                <Link
-                    href={`/dashboard/${role}/support`}
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${pathname.includes('/support')
-                        ? 'bg-indigo-50/80 text-[#5347CE] font-semibold shadow-sm'
-                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                >
-                    <Shield className={`w-5 h-5 ${pathname.includes('/support') ? 'text-[#5347CE]' : 'text-gray-400'}`} />
-                    Support Tickets
-                </Link>
-                <Link
-                    href="/dashboard/settings"
-                    className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 group ${pathname.includes('/settings')
-                        ? 'bg-indigo-50/80 text-[#5347CE] font-semibold shadow-sm'
-                        : 'text-gray-500 hover:bg-gray-50 hover:text-gray-900'
-                        }`}
-                >
-                    <Settings className={`w-5 h-5 ${pathname.includes('/settings') ? 'text-[#5347CE]' : 'text-gray-400'}`} />
-                    Settings
-                </Link>
-            </nav>
+                                return (
+                                    <Link
+                                        key={item.href}
+                                        href={item.href}
+                                        onClick={() => {
+                                            if (window.innerWidth < 1024) onClose();
+                                        }}
+                                        className={`flex items-center gap-4 px-4 py-3.5 rounded-2xl transition-all duration-300 group ${isActive
+                                            ? 'bg-indigo-600 text-white font-bold shadow-lg shadow-indigo-200'
+                                            : 'text-gray-500 hover:bg-indigo-50 hover:text-indigo-600'
+                                            }`}
+                                    >
+                                        <Icon className={`w-5 h-5 transition-transform duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-110'}`} />
+                                        <span className="text-sm tracking-tight">{item.name}</span>
+                                        {isActive && (
+                                            <motion.div
+                                                layoutId="active-pill"
+                                                className="ml-auto w-1.5 h-1.5 rounded-full bg-white shadow-sm"
+                                            />
+                                        )}
+                                    </Link>
+                                );
+                            })}
+                        </nav>
 
-            {/* User Footer */}
-            <div className="mt-auto p-4 border-t border-[var(--bg-input)] bg-[var(--bg-card)]/50 space-y-2">
-                <div className="flex items-center justify-center mb-3">
-                    <ThemeToggle />
-                </div>
-                <button
-                    onClick={() => signOut({ callbackUrl: '/' })}
-                    className="flex items-center gap-3 px-4 py-3 w-full rounded-xl text-[var(--text-secondary)] hover:bg-red-500/10 hover:text-red-600 hover:shadow-[0_2px_10px_rgba(239,68,68,0.1)] transition-all duration-300 group border border-transparent hover:border-red-200"
-                >
-                    <LogOut className="w-5 h-5 transition-transform group-hover:-translate-x-1 group-hover:scale-110" />
-                    <span className="font-semibold">Logout</span>
-                </button>
-            </div>
-        </aside>
+                        {/* User Footer */}
+                        <div className="mt-auto p-6 border-t border-gray-50 space-y-4">
+                            <div className="flex items-center justify-between px-2">
+                                <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Appearance</span>
+                                <ThemeToggle />
+                            </div>
+                            <button
+                                onClick={() => signOut({ callbackUrl: '/' })}
+                                className="flex items-center gap-4 px-4 py-4 w-full rounded-2xl text-gray-500 hover:bg-red-50 hover:text-red-600 transition-all duration-300 group font-bold text-sm"
+                            >
+                                <LogOut className="w-5 h-5 transition-transform group-hover:-translate-x-1" />
+                                <span>Logout System</span>
+                            </button>
+                        </div>
+                    </motion.aside>
+                </>
+            )}
+        </AnimatePresence>
     );
 }
