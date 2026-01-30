@@ -1,20 +1,20 @@
-# Netlify Configuration
-
 [build]
-  publish = ".next"
+publish = ".next"
+command = "npx next build"
 
 [[plugins]]
-  package = "@netlify/plugin-nextjs"
+package = "@netlify/plugin-nextjs"
 
 [[redirects]]
-  from = "/*"
-  to = "/:splat"
-  status = 200
-  force = false
+from = "/*"
+to = "/:splat"
+status = 200
+force = false
 
 [[headers]]
-  for = "/*"
-  [headers.values]
-    X-Frame-Options = "DENY"
-    X-Content-Type-Options = "nosniff"
-    Referrer-Policy = "strict-origin-when-cross-origin"
+for = "/*"
+
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "strict-origin-when-cross-origin"
